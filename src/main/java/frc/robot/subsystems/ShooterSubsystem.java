@@ -5,9 +5,10 @@
 package frc.robot.subsystems;
 
 import com.revrobotics.spark.SparkBase.ControlType;
+import com.revrobotics.spark.SparkBase.PersistMode;
+import com.revrobotics.spark.SparkBase.ResetMode;
 import com.revrobotics.spark.config.ClosedLoopConfig;
 import com.revrobotics.spark.config.SparkBaseConfig;
-import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.SparkFlex;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.RelativeEncoder;
@@ -55,27 +56,29 @@ public class ShooterSubsystem extends SubsystemBase {
         
         invertMotors();
         isRunning = true; 
-        // shooterMotorTop.setSmartCurrentLimit(ShooterConstants.topShooterStallLimit, ShooterConstants.topShooterFreeLimit);
         topShooterPidController = shooterMotorTop.getClosedLoopController();
-        topShooterPidController.setReference(bottomPIDsetpoint, null, 0);
+        topShooterPidController.setReference(topPIDsetpoint, ControlType.kVelocity, 0);
         topShooterPidConfig = new ClosedLoopConfig();
         topShooterPidConfig.p(0.00065 * 2);
         topShooterPidConfig.i(0);
         topShooterPidConfig.d(0);
         topShooterPidConfig.iZone(0);
-        topShooterPidConfig.outputRange(-1, 1); 
-    
+        topShooterPidConfig.outputRange(-1, 1);
+        sparkBaseConfigTop.closedLoop.apply(topShooterPidConfig);
+        sparkBaseConfigTop.smartCurrentLimit(ShooterConstants.topShooterStallLimit, ShooterConstants.topShooterFreeLimit);
+        shooterMotorTop.configure(sparkBaseConfigTop, ResetMode.kNoResetSafeParameters, PersistMode.kPersistParameters);
 
-
-        // shooterMotorBottom.setSmartCurrentLimit(ShooterConstants.bottomShooterStallLimit, ShooterConstants.bottomShooterFreeLimit);
         bottomShooterPidController = shooterMotorBottom.getClosedLoopController();
-        bottomShooterPidController.setReference(topPIDsetpoint, null, 0);
+        bottomShooterPidController.setReference(bottomPIDsetpoint, ControlType.kVelocity, 0);
         bottomShooterPidConfig = new ClosedLoopConfig();
         bottomShooterPidConfig.p(0.00065 * 2);
         bottomShooterPidConfig.i(0);
         bottomShooterPidConfig.d(0);
         bottomShooterPidConfig.iZone(0);
         bottomShooterPidConfig.outputRange(-1, 1);
+        sparkBaseConfigBottom.closedLoop.apply(bottomShooterPidConfig);
+        sparkBaseConfigBottom.smartCurrentLimit(ShooterConstants.bottomShooterStallLimit, ShooterConstants.bottomShooterFreeLimit);
+        shooterMotorBottom.configure(sparkBaseConfigBottom, ResetMode.kNoResetSafeParameters, PersistMode.kPersistParameters);
     }
 
     public void setRPM(double topRPM, double bottomRPM) {
