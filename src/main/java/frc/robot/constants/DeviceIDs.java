@@ -33,8 +33,8 @@ public final class DeviceIDs {
         // Limit switch DIO ID
         limitSwitch(0),
 
-        // Arm Through Bore Encoder DIO ID
-        armEncoder(5);
+        // Wrist Through Bore Encoder DIO ID
+        wristEncoder(5);
 
         public final int id;
 

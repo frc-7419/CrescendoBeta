@@ -9,7 +9,7 @@ public class RobotConstants {
     public static final String canBus = "Ryan Biggee";
 
     public static class ShooterConstants {
-        public static final Angle armOffset = Degrees.of(40);
+        public static final Angle wristOffset = Degrees.of(40);
         public static final Angle encoderOffset = Rotations.of(0.587);
     }
 }
