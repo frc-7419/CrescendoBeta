@@ -15,18 +15,17 @@ import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.spark.SparkBase;
 import com.revrobotics.spark.SparkClosedLoopController;
-import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.constants.DeviceIDs.CanIds;
-import frc.robot.constants.RobotConstants.ShooterConstants;
+import frc.robot.Constants.CanIds;
+import frc.robot.Constants.ShooterConstants;
 
 public class ShooterSubsystem extends SubsystemBase {
     /**
      * Creates a new Shooter.
      */
-    private final SparkFlex shooterMotorTop;
-    private final SparkFlex shooterMotorBottom;
+    private final SparkFlex topShooterMotor;
+    private final SparkFlex bottomShooterMotor;
     private final RelativeEncoder topShooterEncoder;
     private final RelativeEncoder bottomShooterEncoder;
 
@@ -47,17 +46,17 @@ public class ShooterSubsystem extends SubsystemBase {
    
     
     public ShooterSubsystem() {
-        shooterMotorTop = new SparkFlex(CanIds.topShooter.id, MotorType.kBrushless);
-        shooterMotorBottom = new SparkFlex(CanIds.bottomShooter.id, MotorType.kBrushless);
-        topShooterEncoder = shooterMotorTop.getEncoder();
-        bottomShooterEncoder = shooterMotorBottom.getEncoder();
+        topShooterMotor = new SparkFlex(CanIds.topShooter.id, MotorType.kBrushless);
+        bottomShooterMotor = new SparkFlex(CanIds.bottomShooter.id, MotorType.kBrushless);
+        topShooterEncoder = topShooterMotor.getEncoder();
+        bottomShooterEncoder = bottomShooterMotor.getEncoder();
 
         sparkBaseConfigTop = new SparkBaseConfig() {}; // not sure if this is the correct constructor declaration
         sparkBaseConfigBottom = new SparkBaseConfig() {}; // not sure if this is the correct constructor declaration
         
         invertMotors();
         isRunning = true; 
-        topShooterPidController = shooterMotorTop.getClosedLoopController();
+        topShooterPidController = topShooterMotor.getClosedLoopController();
         topShooterPidController.setReference(topPIDsetpoint, ControlType.kVelocity, 0);
         topShooterPidConfig = new ClosedLoopConfig();
         topShooterPidConfig.p(0.00065 * 2, ClosedLoopSlot.kSlot0);
@@ -68,9 +67,9 @@ public class ShooterSubsystem extends SubsystemBase {
         topShooterPidConfig.velocityFF(kV, ClosedLoopSlot.kSlot0);
         sparkBaseConfigTop.closedLoop.apply(topShooterPidConfig);
         sparkBaseConfigTop.smartCurrentLimit(ShooterConstants.topShooterStallLimit, ShooterConstants.topShooterFreeLimit);
-        shooterMotorTop.configure(sparkBaseConfigTop, ResetMode.kNoResetSafeParameters, PersistMode.kPersistParameters);
+        topShooterMotor.configure(sparkBaseConfigTop, ResetMode.kNoResetSafeParameters, PersistMode.kPersistParameters);
 
-        bottomShooterPidController = shooterMotorBottom.getClosedLoopController();
+        bottomShooterPidController = bottomShooterMotor.getClosedLoopController();
         bottomShooterPidController.setReference(bottomPIDsetpoint, ControlType.kVelocity, 0);
         bottomShooterPidConfig = new ClosedLoopConfig();
         bottomShooterPidConfig.p(0.00065 * 2, ClosedLoopSlot.kSlot0);
@@ -81,7 +80,7 @@ public class ShooterSubsystem extends SubsystemBase {
         bottomShooterPidConfig.velocityFF(kV, ClosedLoopSlot.kSlot0);
         sparkBaseConfigBottom.closedLoop.apply(bottomShooterPidConfig);
         sparkBaseConfigBottom.smartCurrentLimit(ShooterConstants.bottomShooterStallLimit, ShooterConstants.bottomShooterFreeLimit);
-        shooterMotorBottom.configure(sparkBaseConfigBottom, ResetMode.kNoResetSafeParameters, PersistMode.kPersistParameters);
+        bottomShooterMotor.configure(sparkBaseConfigBottom, ResetMode.kNoResetSafeParameters, PersistMode.kPersistParameters);
     }
 
     public void setRPM(double topRPM, double bottomRPM) {
@@ -97,18 +96,18 @@ public class ShooterSubsystem extends SubsystemBase {
     }
 
     public void invertMotors() {
-        shooterMotorBottom.setInverted(true);
-        shooterMotorTop.setInverted(false);
+        bottomShooterMotor.setInverted(true);
+        topShooterMotor.setInverted(false);
     }
 
  
 
     public void setTopSpeed(double speed) {
-        shooterMotorTop.set(speed);
+        topShooterMotor.set(speed);
     }
 
     public void setBottomSpeed(double speed) {
-        shooterMotorBottom.set(speed);
+        bottomShooterMotor.set(speed);
     }
 
     public void setBothSpeed(double speed) {
@@ -133,11 +132,11 @@ public class ShooterSubsystem extends SubsystemBase {
     }
 
     public void setTopVoltage(double voltage) {
-        shooterMotorTop.setVoltage(voltage);
+        topShooterMotor.setVoltage(voltage);
     }
 
     public void setBottomVoltage(double voltage) {
-        shooterMotorBottom.setVoltage(voltage);
+        bottomShooterMotor.setVoltage(voltage);
     }
 
     public void setBothVoltage(double voltage) {
@@ -146,22 +145,22 @@ public class ShooterSubsystem extends SubsystemBase {
     }
 
     public double getTopVelocity() {
-        return shooterMotorTop.getEncoder().getVelocity();
+        return topShooterMotor.getEncoder().getVelocity();
     }
 
     public double getBottomVelocity() {
-        return shooterMotorBottom.getEncoder().getVelocity();
+        return bottomShooterMotor.getEncoder().getVelocity();
     }
 
     public void brake() {
-        // shooterMotorTop.stopMotor();
-        // shooterMotorBottom.stopMotor();
+        // topShooterMotor.stopMotor();
+        // bottomShooterMotor.stopMotor();
 
         sparkBaseConfigTop.idleMode(SparkBaseConfig.IdleMode.kBrake);
         sparkBaseConfigBottom.idleMode(SparkBaseConfig.IdleMode.kBrake);
 
-        shooterMotorTop.configure(sparkBaseConfigTop, SparkBase.ResetMode.kResetSafeParameters, SparkBase.PersistMode.kPersistParameters);
-        shooterMotorBottom.configure(sparkBaseConfigTop, SparkBase.ResetMode.kResetSafeParameters, SparkBase.PersistMode.kPersistParameters);
+        topShooterMotor.configure(sparkBaseConfigTop, SparkBase.ResetMode.kResetSafeParameters, SparkBase.PersistMode.kPersistParameters);
+        bottomShooterMotor.configure(sparkBaseConfigTop, SparkBase.ResetMode.kResetSafeParameters, SparkBase.PersistMode.kPersistParameters);
     }
 
     public void coast() {
@@ -169,8 +168,8 @@ public class ShooterSubsystem extends SubsystemBase {
         sparkBaseConfigTop.idleMode(SparkBaseConfig.IdleMode.kCoast);
         sparkBaseConfigBottom.idleMode(SparkBaseConfig.IdleMode.kCoast);
 
-        shooterMotorTop.configure(sparkBaseConfigTop, SparkBase.ResetMode.kResetSafeParameters, SparkBase.PersistMode.kPersistParameters);
-        shooterMotorBottom.configure(sparkBaseConfigTop, SparkBase.ResetMode.kResetSafeParameters, SparkBase.PersistMode.kPersistParameters);
+        topShooterMotor.configure(sparkBaseConfigTop, SparkBase.ResetMode.kResetSafeParameters, SparkBase.PersistMode.kPersistParameters);
+        bottomShooterMotor.configure(sparkBaseConfigTop, SparkBase.ResetMode.kResetSafeParameters, SparkBase.PersistMode.kPersistParameters);
     }
 
     public boolean getToggle() {
