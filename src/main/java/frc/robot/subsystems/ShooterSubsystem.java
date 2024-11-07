@@ -46,23 +46,25 @@ public class ShooterSubsystem extends SubsystemBase {
         shooterMotorBottom = new SparkFlex(CanIds.bottomShooter.id, MotorType.kBrushless);
         topShooterEncoder = shooterMotorTop.getEncoder();
         bottomShooterEncoder = shooterMotorBottom.getEncoder();
-    
+        
         invertMotors();
         isRunning = true; 
         shooterMotorTop.setSmartCurrentLimit(ShooterConstants.topShooterStallLimit, ShooterConstants.topShooterFreeLimit);
         topShooterPidController = shooterMotorTop.getClosedLoopController();
         topShooterPidController.setReference(bottomPIDsetpoint, null, 0);
-        topShooterPidController.setP(0.00065 * 2); 
-        topShooterPidController.setI(0);
-        topShooterPidController.setD(0);
-        topShooterPidController.setIZone(0);
-        topShooterPidController.setReference(1,control,1,1); //this is how
-        topShooterPidController.setOutputRange(-1, 1);
+        topShooterPidConfig = new ClosedLoopConfig();
+        topShooterPidConfig.p(0.00065 * 2);
+        topShooterPidConfig.i(0);
+        topShooterPidConfig.d(0);
+        topShooterPidConfig.iZone(0);
+        topShooterPidConfig.outputRange(-1, 1);
+        topShooterPidController.
     
 
 
         shooterMotorBottom.setSmartCurrentLimit(ShooterConstants.bottomShooterStallLimit, ShooterConstants.bottomShooterFreeLimit);
         bottomShooterPidController = shooterMotorBottom.getClosedLoopController();
+        bott
         bottomShooterPidController.setP(0.00065 * 2);
         bottomShooterPidController.setI(0);
         bottomShooterPidController.setD(0);
