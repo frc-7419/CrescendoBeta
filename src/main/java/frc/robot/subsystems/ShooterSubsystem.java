@@ -28,12 +28,15 @@ public class ShooterSubsystem extends SubsystemBase {
     private final RelativeEncoder topShooterEncoder;
     private final RelativeEncoder bottomShooterEncoder;
 
+    private final SparkBaseConfig sparkBaseConfigTop;
+    private final SparkBaseConfig sparkBaseConfigBottom;
+
     private final SparkClosedLoopController topShooterPidController;
     private final ClosedLoopConfig topShooterPidConfig;
     private final SimpleMotorFeedforward topFeedforward = new SimpleMotorFeedforward(0.10894, 0.10806, 0.015777);
 
     private final SparkClosedLoopController bottomShooterPidController;
-    private final ClosedLoopConfig bottomShooterPidConfing;
+    private final ClosedLoopConfig bottomShooterPidConfig;
     private final SimpleMotorFeedforward bottomFeedforward = new SimpleMotorFeedforward(0.10894, 0.10806, 0.015777);
 
     private boolean isRunning;
@@ -46,10 +49,13 @@ public class ShooterSubsystem extends SubsystemBase {
         shooterMotorBottom = new SparkFlex(CanIds.bottomShooter.id, MotorType.kBrushless);
         topShooterEncoder = shooterMotorTop.getEncoder();
         bottomShooterEncoder = shooterMotorBottom.getEncoder();
+
+        sparkBaseConfigTop = new SparkBaseConfig() {}; // not sure if this is the correct constructor declaration
+        sparkBaseConfigBottom = new SparkBaseConfig() {}; // not sure if this is the correct constructor declaration
         
         invertMotors();
         isRunning = true; 
-        shooterMotorTop.setSmartCurrentLimit(ShooterConstants.topShooterStallLimit, ShooterConstants.topShooterFreeLimit);
+        // shooterMotorTop.setSmartCurrentLimit(ShooterConstants.topShooterStallLimit, ShooterConstants.topShooterFreeLimit);
         topShooterPidController = shooterMotorTop.getClosedLoopController();
         topShooterPidController.setReference(bottomPIDsetpoint, null, 0);
         topShooterPidConfig = new ClosedLoopConfig();
@@ -57,24 +63,27 @@ public class ShooterSubsystem extends SubsystemBase {
         topShooterPidConfig.i(0);
         topShooterPidConfig.d(0);
         topShooterPidConfig.iZone(0);
-        topShooterPidConfig.outputRange(-1, 1);
-        topShooterPidController.
+        topShooterPidConfig.outputRange(-1, 1); 
     
 
 
-        shooterMotorBottom.setSmartCurrentLimit(ShooterConstants.bottomShooterStallLimit, ShooterConstants.bottomShooterFreeLimit);
+        // shooterMotorBottom.setSmartCurrentLimit(ShooterConstants.bottomShooterStallLimit, ShooterConstants.bottomShooterFreeLimit);
         bottomShooterPidController = shooterMotorBottom.getClosedLoopController();
-        bott
-        bottomShooterPidController.setP(0.00065 * 2);
-        bottomShooterPidController.setI(0);
-        bottomShooterPidController.setD(0);
-        bottomShooterPidController.setIZone(0);
-        bottomShooterPidController.setOutputRange(-1, 1);
+        bottomShooterPidController.setReference(topPIDsetpoint, null, 0);
+        bottomShooterPidConfig = new ClosedLoopConfig();
+        bottomShooterPidConfig.p(0.00065 * 2);
+        bottomShooterPidConfig.i(0);
+        bottomShooterPidConfig.d(0);
+        bottomShooterPidConfig.iZone(0);
+        bottomShooterPidConfig.outputRange(-1, 1);
     }
 
     public void setRPM(double topRPM, double bottomRPM) {
-        topShooterPidController.setFF(0.0003 / 2);
-        bottomShooterPidController.setFF(0.0003 / 2);
+        // topShooterPidController.setFF(0.0003 / 2);
+        // bottomShooterPidController.setFF(0.0003 / 2);
+
+        topShooterPidController.setReference(bottomPIDsetpoint, null, 0, 0.0003/2);
+        bottomShooterPidController.setReference(bottomPIDsetpoint, null, 0, 0.0003/2);
 
         // System.out.println("changing rpm" + topRPM + bottomRPM);
         topShooterPidController.setReference(topRPM, ControlType.kVelocity);
@@ -137,14 +146,23 @@ public class ShooterSubsystem extends SubsystemBase {
     }
 
     public void brake() {
-        shooterMotorTop.stopMotor();
-        shooterMotorBottom.stopMotor();
+        // shooterMotorTop.stopMotor();
+        // shooterMotorBottom.stopMotor();
+
+        sparkBaseConfigTop.idleMode(SparkBaseConfig.IdleMode.kBrake);
+        sparkBaseConfigBottom.idleMode(SparkBaseConfig.IdleMode.kBrake);
+
+        shooterMotorTop.configure(sparkBaseConfigTop, SparkBase.ResetMode.kResetSafeParameters, SparkBase.PersistMode.kPersistParameters);
+        shooterMotorBottom.configure(sparkBaseConfigTop, SparkBase.ResetMode.kResetSafeParameters, SparkBase.PersistMode.kPersistParameters);
     }
 
     public void coast() {
-        //TODO: Figure out what the analog of coast is in 2025
-        // shooterMotorTop.setIdleMode(IdleMode.kCoast);
-        // shooterMotorBottom.setIdleMode(IdleMode.kCoast);
+
+        sparkBaseConfigTop.idleMode(SparkBaseConfig.IdleMode.kCoast);
+        sparkBaseConfigBottom.idleMode(SparkBaseConfig.IdleMode.kCoast);
+
+        shooterMotorTop.configure(sparkBaseConfigTop, SparkBase.ResetMode.kResetSafeParameters, SparkBase.PersistMode.kPersistParameters);
+        shooterMotorBottom.configure(sparkBaseConfigTop, SparkBase.ResetMode.kResetSafeParameters, SparkBase.PersistMode.kPersistParameters);
     }
 
     public boolean getToggle() {
