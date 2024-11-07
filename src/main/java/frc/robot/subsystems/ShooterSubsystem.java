@@ -35,17 +35,17 @@ public class ShooterSubsystem extends SubsystemBase {
 
     private final SparkClosedLoopController topShooterPidController;
     private final ClosedLoopConfig topShooterPidConfig;
-    private final SimpleMotorFeedforward topFeedforward = new SimpleMotorFeedforward(0.10894, 0.10806, 0.015777);
+    // private final SimpleMotorFeedforward topFeedforward = new SimpleMotorFeedforward(0.10894, 0.10806, 0.015777);
 
     private final SparkClosedLoopController bottomShooterPidController;
     private final ClosedLoopConfig bottomShooterPidConfig;
-    private final SimpleMotorFeedforward bottomFeedforward = new SimpleMotorFeedforward(0.10894, 0.10806, 0.015777);
-
+    // private final SimpleMotorFeedforward bottomFeedforward = new SimpleMotorFeedforward(0.10894, 0.10806, 0.015777);
+    private final double kV = 0.10806;
     private boolean isRunning;
     private double topPIDsetpoint;
     private double bottomPIDsetpoint;
    
-
+    
     public ShooterSubsystem() {
         shooterMotorTop = new SparkFlex(CanIds.topShooter.id, MotorType.kBrushless);
         shooterMotorBottom = new SparkFlex(CanIds.bottomShooter.id, MotorType.kBrushless);
@@ -65,6 +65,7 @@ public class ShooterSubsystem extends SubsystemBase {
         topShooterPidConfig.d(0, ClosedLoopSlot.kSlot0);
         topShooterPidConfig.iZone(0, ClosedLoopSlot.kSlot0);
         topShooterPidConfig.outputRange(-1, 1, ClosedLoopSlot.kSlot0);
+        topShooterPidConfig.velocityFF(kV, ClosedLoopSlot.kSlot0);
         sparkBaseConfigTop.closedLoop.apply(topShooterPidConfig);
         sparkBaseConfigTop.smartCurrentLimit(ShooterConstants.topShooterStallLimit, ShooterConstants.topShooterFreeLimit);
         shooterMotorTop.configure(sparkBaseConfigTop, ResetMode.kNoResetSafeParameters, PersistMode.kPersistParameters);
@@ -77,6 +78,7 @@ public class ShooterSubsystem extends SubsystemBase {
         bottomShooterPidConfig.d(0, ClosedLoopSlot.kSlot0);
         bottomShooterPidConfig.iZone(0, ClosedLoopSlot.kSlot0);
         bottomShooterPidConfig.outputRange(-1, 1, ClosedLoopSlot.kSlot0);
+        bottomShooterPidConfig.velocityFF(kV, ClosedLoopSlot.kSlot0);
         sparkBaseConfigBottom.closedLoop.apply(bottomShooterPidConfig);
         sparkBaseConfigBottom.smartCurrentLimit(ShooterConstants.bottomShooterStallLimit, ShooterConstants.bottomShooterFreeLimit);
         shooterMotorBottom.configure(sparkBaseConfigBottom, ResetMode.kNoResetSafeParameters, PersistMode.kPersistParameters);
@@ -98,6 +100,8 @@ public class ShooterSubsystem extends SubsystemBase {
         shooterMotorBottom.setInverted(true);
         shooterMotorTop.setInverted(false);
     }
+
+ 
 
     public void setTopSpeed(double speed) {
         shooterMotorTop.set(speed);
