@@ -35,9 +35,9 @@ public class TunableWristPID extends Command {
 
     // Initialize PID controller with SmartDashboard values or constants.
     wristPidController = new ProfiledPIDController(
-        SmartDashboard.getNumber("Wrist kP", WristConstants.kP),
-        SmartDashboard.getNumber("Wrist kI", WristConstants.kI),
-        SmartDashboard.getNumber("Wrist kD", WristConstants.kD),
+        WristConstants.kP,
+        WristConstants.kI,
+        WristConstants.kD,
         new TrapezoidProfile.Constraints(
             WristConstants.maxVelocity.in(MetersPerSecond),
             WristConstants.maxAcceleration.in(MetersPerSecondPerSecond)));
@@ -45,10 +45,7 @@ public class TunableWristPID extends Command {
     armFeedforward = new ArmFeedforward(WristConstants.kS, WristConstants.kV, WristConstants.kG);
 
     // Initialize SmartDashboard entries.
-    SmartDashboard.putNumber("Wrist kP", WristConstants.kP);
-    SmartDashboard.putNumber("Wrist kI", WristConstants.kI);
-    SmartDashboard.putNumber("Wrist kD", WristConstants.kD);
-    SmartDashboard.putNumber("Wrist Setpoint", 0.0);
+    SmartDashboard.putData("Wrist PID", wristPidController);
     SmartDashboard.putBoolean("Enable Wrist Tuning", false);
 
     addRequirements(wristSubsystem);
@@ -61,8 +58,8 @@ public class TunableWristPID extends Command {
   @Override
   public void initialize() {
     wristSubsystem.coast();
-    double initialSetpoint = SmartDashboard.getNumber("Wrist Setpoint", 0.0);
-    wristPidController.setGoal(initialSetpoint);
+    wristPidController.setGoal(40);
+    wristPidController.setTolerance(WristConstants.pidTolerance.in(Degrees));
   }
 
   /**
@@ -75,33 +72,20 @@ public class TunableWristPID extends Command {
     boolean tuningEnabled = SmartDashboard.getBoolean("Enable Wrist Tuning", false);
 
     if (tuningEnabled) {
-      // Update PID values from SmartDashboard.
-      double kP = SmartDashboard.getNumber("Wrist kP", WristConstants.kP);
-      double kI = SmartDashboard.getNumber("Wrist kI", WristConstants.kI);
-      double kD = SmartDashboard.getNumber("Wrist kD", WristConstants.kD);
+      // Calculate PID and feedforward outputs.
+      double output = wristPidController.calculate(wristSubsystem.getPosition().in(Degrees));
+      Voltage feedforward = armFeedforward.calculate(
+          wristSubsystem.getPosition(), wristSubsystem.getVelocity());
 
-      wristPidController.setP(kP);
-      wristPidController.setI(kI);
-      wristPidController.setD(kD);
+      wristSubsystem.set(output + feedforward.in(Volts));
 
-      // Update setpoint if changed.
-      double setpoint = SmartDashboard.getNumber("Wrist Setpoint", wristPidController.getGoal().position);
-      if (setpoint != wristPidController.getGoal().position) {
-        wristPidController.setGoal(setpoint);
-      }
+      // Update SmartDashboard with telemetry.
+      SmartDashboard.putNumber("Wrist Position", wristSubsystem.getPosition().in(Degrees));
+      SmartDashboard.putNumber("Wrist Velocity", wristSubsystem.getVelocity().in(DegreesPerSecond));
+      SmartDashboard.putNumber("Wrist PID Output", output);
+    } else {
+      wristSubsystem.set(0);
     }
-
-    // Calculate PID and feedforward outputs.
-    double output = wristPidController.calculate(wristSubsystem.getPosition().in(Degrees));
-    Voltage feedforward = armFeedforward.calculate(
-        wristSubsystem.getPosition(), wristSubsystem.getVelocity());
-
-    wristSubsystem.set(output + feedforward.in(Volts));
-
-    // Update SmartDashboard with telemetry.
-    SmartDashboard.putNumber("Wrist Position", wristSubsystem.getPosition().in(Degrees));
-    SmartDashboard.putNumber("Wrist Velocity", wristSubsystem.getVelocity().in(DegreesPerSecond));
-    SmartDashboard.putNumber("Wrist PID Output", output);
   }
 
   /**
