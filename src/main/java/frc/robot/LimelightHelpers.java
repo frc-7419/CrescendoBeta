@@ -1,5 +1,4 @@
 //LimelightHelpers v1.9 (REQUIRES 2024.9.1)
-
 package frc.robot;
 
 import java.io.IOException;

@@ -6,6 +6,9 @@ package frc.robot;
 
 import com.ctre.phoenix6.Utils;
 
+import edu.wpi.first.math.VecBuilder;
+import edu.wpi.first.math.estimator.PoseEstimator;
+import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
@@ -14,12 +17,16 @@ public class Robot extends TimedRobot {
   private Command m_autonomousCommand;
 
   private final RobotContainer m_robotContainer;
+  private final SwerveDrivePoseEstimator m_poseEstimator;
 
-  private final boolean kUseLimelight = false;
+  //private final boolean kUseLimelight = false;
 
   public Robot() {
     m_robotContainer = new RobotContainer();
+    m_poseEstimator = new SwerveDrivePoseEstimator(m_robotContainer.drivetrain.getKinematics(), null, null, null);
+    //m_gyro = 
   }
+  
 
   @Override
   public void robotPeriodic() {
@@ -33,13 +40,29 @@ public class Robot extends TimedRobot {
      * This example is sufficient to show that vision integration is possible, though exact implementation
      * of how to use vision should be tuned per-robot and to the team's specification.
      */
-    if (kUseLimelight) {
-      var llMeasurement = LimelightHelpers.getBotPoseEstimate_wpiBlue("limelight");
-      if (llMeasurement != null) {
-        m_robotContainer.drivetrain.addVisionMeasurement(llMeasurement.pose, Utils.fpgaToCurrentTime(llMeasurement.timestampSeconds));
+  //   if (kUseLimelight) {
+  //     var llMeasurement = LimelightHelpers.getBotPoseEstimate_wpiBlue("limelight");
+  //     if (llMeasurement != null) {
+  //       m_robotContainer.drivetrain.addVisionMeasurement(llMeasurement.pose, Utils.fpgaToCurrentTime(llMeasurement.timestampSeconds));
+  //     }
+  //   }
+      boolean doRejectUpdate = false;
+      LimelightHelpers.SetRobotOrientation("limelight", m_poseEstimator.getEstimatedPosition().getRotation().getDegrees(), 0, 0, 0, 0, 0);
+      LimelightHelpers.PoseEstimate mt2 = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2("limelight");
+      // Need to add the gyro
+      //if(Math.abs(m_gyro.getRate()) > 720) // if our angular velocity is greater than 720 degrees per second, ignore vision updates
+      { 
+        doRejectUpdate = true;
       }
-    }
-  }
+      if(!doRejectUpdate)
+      {
+        m_poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(.6,.6,9999999));
+        m_poseEstimator.addVisionMeasurement(
+            mt2.pose,
+            mt2.timestampSeconds);
+      }
+}
+
 
   @Override
   public void disabledInit() {}
