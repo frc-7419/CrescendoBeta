@@ -47,6 +47,21 @@ public class WristSubsystem extends SubsystemBase {
    * @param voltage the voltage to apply to the motor
    */
   public void set(double voltage) {
+    Angle currentPosition = getPosition();
+
+    // Prevent movement beyond max limit
+    if (currentPosition.gt(WristConstants.maxLimit) && voltage > 0) {
+      wristMotor.setVoltage(0);
+      return;
+    }
+
+    // Prevent movement below min limit
+    if (currentPosition.lt(WristConstants.minLimit) && voltage < 0) {
+      wristMotor.setVoltage(0);
+      return;
+    }
+
+    // Apply voltage if within limits
     wristMotor.setVoltage(voltage);
   }
 

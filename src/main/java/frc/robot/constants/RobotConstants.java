@@ -19,5 +19,7 @@ public class RobotConstants {
         public static final LinearVelocity maxVelocity = MetersPerSecond.of(20);
         public static final LinearAcceleration maxAcceleration = MetersPerSecondPerSecond.of(1);
         public static final Angle pidTolerance = Degrees.of(0.5);
+        public static final Angle maxLimit = Degrees.of(70); // Needs to be tuned
+        public static final Angle minLimit = Degrees.of(30); // Needs to be tuned
     }
 }
